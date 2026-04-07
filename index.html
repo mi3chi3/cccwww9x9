@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Calendar</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="header">
+    <button id="prev">◀︎</button>
+    <div id="monthLabel"></div>
+    <button id="next">▶︎</button>
+  </div>
+
+  <div class="week">
+    <div>日</div><div>月</div><div>火</div>
+    <div>水</div><div>木</div><div>金</div><div>土</div>
+  </div>
+
+  <div class="calendar" id="calendar"></div>
+
+  <div class="modal hidden" id="modal">
+    <div class="modal-content" id="modalContent">
+      <input type="text" id="title" placeholder="タイトル">
+
+      <div class="colors">
+        <div class="color selected" style="background:#E8A0B8"></div>
+        <div class="color" style="background:#7EC3D8"></div>
+        <div class="color" style="background:#F5D547"></div>
+        <div class="color" style="background:#A8E6CF"></div>
+      </div>
+
+      <div class="modal-buttons">
+        <button id="cancel">戻る</button>
+        <button id="save">保存</button>
+      </div>
+    </div>
+  </div>
+
+<script src="script.js"></script>
+</body>
+</html>
