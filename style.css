@@ -1,0 +1,93 @@
+body {
+  font-family: sans-serif;
+  background: #F7F4F2;
+  margin: 0;
+}
+
+.header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  padding: 15px;
+  font-size: 18px;
+}
+
+.header button {
+  border: none;
+  background: white;
+  border-radius: 8px;
+  padding: 5px 10px;
+}
+
+.week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 12px;
+}
+
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  padding: 10px;
+}
+
+.day {
+  background: white;
+  border-radius: 12px;
+  height: 80px;
+  padding: 5px;
+}
+
+.event {
+  border-radius: 6px;
+  font-size: 10px;
+  margin-top: 4px;
+  padding: 2px;
+  color: white;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.3);
+}
+
+.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  margin: 100px auto;
+  width: 80%;
+  border-radius: 12px;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.colors {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.color {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+
+.color.selected {
+  outline: 3px solid black;
+}
