@@ -30,23 +30,19 @@ body {
   position: relative;
 }
 
-/* 👇 完全な円 */
 .date {
-  width: 24px;
-  height: 24px;
-  line-height: 24px;
+  width: 26px;
+  height: 26px;
+  line-height: 26px;
   border-radius: 50%;
   text-align: center;
-  font-size: 12px;
 }
 
-/* 👇 今日 */
 .today .date {
   background: red;
   color: white;
 }
 
-/* 👇 ゴミ絵文字（確実表示） */
 .trash {
   position: absolute;
   top: 4px;
@@ -55,7 +51,24 @@ body {
   opacity: 0.4;
 }
 
-/* モーダル */
+/* 👇 色選択 */
+.colors {
+  display: flex;
+  gap: 12px;
+  margin: 10px 0;
+}
+
+.color {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.color.selected {
+  outline: 3px solid black;
+}
+
 .modal {
   position: fixed;
   top: 0;
