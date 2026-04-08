@@ -1,6 +1,5 @@
 const calendar = document.getElementById("calendar");
 const modal = document.getElementById("modal");
-const titleInput = document.getElementById("title");
 const saveBtn = document.getElementById("save");
 const cancelBtn = document.getElementById("cancel");
 const trashSelect = document.getElementById("trashSelect");
@@ -8,7 +7,6 @@ const monthLabel = document.getElementById("monthLabel");
 
 let currentMonth = new Date().getMonth() + 1;
 let currentYear = new Date().getFullYear();
-
 let selectedDay = null;
 
 let trashOverrides = JSON.parse(localStorage.getItem("trash")) || {};
@@ -55,7 +53,7 @@ function renderCalendar() {
     dateEl.className = "date";
     dateEl.innerText = i;
 
-    // 今日判定
+    // 今日
     if (
       i === today.getDate() &&
       currentMonth === today.getMonth() + 1 &&
@@ -75,10 +73,23 @@ function renderCalendar() {
     if (trash) {
       const t = document.createElement("div");
       t.className = "trash";
-      t.innerText = trash;
+      t.textContent = trash;
       day.appendChild(t);
     }
 
+    // 👇 スマホ対応ダブルタップ
+    let lastTap = 0;
+    day.addEventListener("touchend", () => {
+      const now = Date.now();
+      if (now - lastTap < 300) {
+        selectedDay = i;
+        trashSelect.value = override || "";
+        modal.classList.remove("hidden");
+      }
+      lastTap = now;
+    });
+
+    // PC
     day.ondblclick = () => {
       selectedDay = i;
       trashSelect.value = override || "";
@@ -108,7 +119,6 @@ saveBtn.onclick = () => {
 
 cancelBtn.onclick = () => modal.classList.add("hidden");
 
-// モーダル外クリック
 modal.onclick = (e) => {
   if (e.target === modal) modal.classList.add("hidden");
 };

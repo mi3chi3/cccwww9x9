@@ -30,27 +30,32 @@ body {
   position: relative;
 }
 
-/* 👇 数字 */
+/* 👇 完全な円 */
 .date {
-  display: inline-block;
-  padding: 2px 6px;
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
   border-radius: 50%;
+  text-align: center;
+  font-size: 12px;
 }
 
-/* 👇 今日（小さい赤丸） */
+/* 👇 今日 */
 .today .date {
   background: red;
   color: white;
 }
 
+/* 👇 ゴミ絵文字（確実表示） */
 .trash {
   position: absolute;
-  top: 2px;
+  top: 4px;
   right: 4px;
-  font-size: 12px;
+  font-size: 14px;
   opacity: 0.4;
 }
 
+/* モーダル */
 .modal {
   position: fixed;
   top: 0;
@@ -63,9 +68,7 @@ body {
   background: rgba(0,0,0,0.3);
 }
 
-.hidden {
-  display: none;
-}
+.hidden { display: none; }
 
 .modal-content {
   background: white;
@@ -73,28 +76,10 @@ body {
   width: 90%;
   max-width: 320px;
   border-radius: 12px;
-  max-height: 80vh;
-  overflow-y: auto;
 }
 
 .modal-buttons {
   display: flex;
   justify-content: space-between;
   margin-top: 10px;
-}
-
-.colors {
-  display: flex;
-  gap: 10px;
-  margin: 10px 0;
-}
-
-.color {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-}
-
-.color.selected {
-  outline: 3px solid black;
 }
