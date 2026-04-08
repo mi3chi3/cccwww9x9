@@ -14,15 +14,15 @@
     <button id="next">▶︎</button>
   </div>
 
-　<div class="week">
-  <div>月</div><div>火</div><div>水</div>
-  <div>木</div><div>金</div><div>土</div><div>日</div>
-　</div>
+  <div class="week">
+    <div>月</div><div>火</div><div>水</div>
+    <div>木</div><div>金</div><div>土</div><div>日</div>
+  </div>
 
   <div class="calendar" id="calendar"></div>
 
   <div class="modal hidden" id="modal">
-    <div class="modal-content" id="modalContent">
+    <div class="modal-content">
       <input type="text" id="title" placeholder="タイトル">
 
       <div class="colors">
@@ -31,6 +31,16 @@
         <div class="color" style="background:#F5D547"></div>
         <div class="color" style="background:#A8E6CF"></div>
       </div>
+
+      <select id="trashSelect">
+        <option value="">ゴミなし</option>
+        <option value="🔥">🔥</option>
+        <option value="♻️">♻️</option>
+        <option value="🍾🥫">🍾🥫</option>
+        <option value="🔋🪥">🔋🪥</option>
+        <option value="👔">👔</option>
+        <option value="📦">📦</option>
+      </select>
 
       <div class="modal-buttons">
         <button id="cancel">戻る</button>

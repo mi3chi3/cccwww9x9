@@ -7,29 +7,17 @@ body {
 .header {
   display: flex;
   justify-content: center;
-  align-items: center;
   gap: 20px;
   padding: 15px;
-  font-size: 18px;
 }
 
-.header button {
-  border: none;
-  background: white;
-  border-radius: 8px;
-  padding: 5px 10px;
-}
-
-.week {
+.week, .calendar {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   text-align: center;
-  font-size: 12px;
 }
 
 .calendar {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
   gap: 6px;
   padding: 10px;
 }
@@ -39,14 +27,28 @@ body {
   border-radius: 12px;
   height: 80px;
   padding: 5px;
+  position: relative;
 }
 
-.event {
-  border-radius: 6px;
-  font-size: 10px;
-  margin-top: 4px;
-  padding: 2px;
+/* 👇 数字 */
+.date {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 50%;
+}
+
+/* 👇 今日（小さい赤丸） */
+.today .date {
+  background: red;
   color: white;
+}
+
+.trash {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 12px;
+  opacity: 0.4;
 }
 
 .modal {
@@ -55,6 +57,9 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: rgba(0,0,0,0.3);
 }
 
@@ -65,9 +70,11 @@ body {
 .modal-content {
   background: white;
   padding: 20px;
-  margin: 100px auto;
-  width: 80%;
+  width: 90%;
+  max-width: 320px;
   border-radius: 12px;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
 .modal-buttons {
