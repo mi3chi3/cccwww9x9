@@ -8,46 +8,69 @@
 </head>
 <body>
 
-  <div class="header">
-    <button id="prev">◀︎</button>
-    <div id="monthLabel"></div>
-    <button id="next">▶︎</button>
-  </div>
+<div class="header">
+  <button id="prev">◀︎</button>
+  <div id="monthLabel"></div>
+  <button id="next">▶︎</button>
+</div>
 
-  <div class="week">
-    <div>月</div><div>火</div><div>水</div>
-    <div>木</div><div>金</div><div>土</div><div>日</div>
-  </div>
+<div class="week">
+  <div>月</div><div>火</div><div>水</div>
+  <div>木</div><div>金</div><div>土</div><div>日</div>
+</div>
 
-  <div class="calendar" id="calendar"></div>
+<div class="calendar" id="calendar"></div>
 
-  <div class="modal hidden" id="modal">
-    <div class="modal-content">
-      <input type="text" id="title" placeholder="タイトル">
+<div class="modal hidden" id="modal">
+  <div class="modal-content">
+    <input id="title" placeholder="タイトル">
 
-      <div class="colors">
-        <div class="color selected" data-color="#E8A0B8" style="background:#E8A0B8"></div>
-        <div class="color" data-color="#7EC3D8" style="background:#7EC3D8"></div>
-        <div class="color" data-color="#F5D547" style="background:#F5D547"></div>
-        <div class="color" data-color="#A8E6CF" style="background:#A8E6CF"></div>
-      </div>
+    <div class="colors">
+      <div class="color selected" data-color="#E8A0B8" style="background:#E8A0B8"></div>
+      <div class="color" data-color="#7EC3D8" style="background:#7EC3D8"></div>
+      <div class="color" data-color="#F5D547" style="background:#F5D547"></div>
+      <div class="color" data-color="#A8E6CF" style="background:#A8E6CF"></div>
+    </div>
 
-      <select id="trashSelect">
-        <option value="">ゴミなし</option>
-        <option value="🔥">🔥</option>
-        <option value="♻️">♻️</option>
-        <option value="🍾🥫">🍾🥫</option>
-        <option value="🔋🪥">🔋🪥</option>
-        <option value="👔">👔</option>
-        <option value="📦">📦</option>
-      </select>
+    <select id="trashSelect">
+      <option value="">ゴミなし</option>
+      <option value="🔥">🔥</option>
+      <option value="♻️">♻️</option>
+      <option value="🍾🥫">🍾🥫</option>
+      <option value="🔋🪥">🔋🪥</option>
+      <option value="👔">👔</option>
+      <option value="📦">📦</option>
+    </select>
 
-      <div class="modal-buttons">
-        <button id="cancel">戻る</button>
-        <button id="save">保存</button>
-      </div>
+    <div class="modal-buttons">
+      <button id="cancel">戻る</button>
+      <button id="save">保存</button>
     </div>
   </div>
+</div>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLlxAgxvT94--DAiErKdhGsb6-mX8bA8s",
+    authDomain: "myc2-fe880.firebaseapp.com",
+    projectId: "myc2-fe880",
+    storageBucket: "myc2-fe880.firebasestorage.app",
+    messagingSenderId: "691622220518",
+    appId: "1:691622220518:web:505cc34778cddf91d5e127"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  window.db = db;
+  window.fDoc = doc;
+  window.fSet = setDoc;
+  window.fGet = getDoc;
+</script>
 
 <script src="script.js"></script>
 </body>

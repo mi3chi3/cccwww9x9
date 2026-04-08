@@ -25,7 +25,7 @@ body {
 .day {
   background: white;
   border-radius: 12px;
-  height: 80px;
+  height: 90px;
   padding: 5px;
   position: relative;
 }
@@ -33,9 +33,9 @@ body {
 .date {
   width: 26px;
   height: 26px;
-  line-height: 26px;
   border-radius: 50%;
-  text-align: center;
+  line-height: 26px;
+  margin: auto;
 }
 
 .today .date {
@@ -47,14 +47,20 @@ body {
   position: absolute;
   top: 4px;
   right: 4px;
-  font-size: 14px;
   opacity: 0.4;
 }
 
-/* 👇 色選択 */
+.event {
+  margin-top: 4px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: white;
+  padding: 2px;
+}
+
 .colors {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   margin: 10px 0;
 }
 
@@ -62,7 +68,6 @@ body {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  cursor: pointer;
 }
 
 .color.selected {
@@ -94,5 +99,4 @@ body {
 .modal-buttons {
   display: flex;
   justify-content: space-between;
-  margin-top: 10px;
 }

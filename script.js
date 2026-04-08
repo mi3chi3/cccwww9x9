@@ -6,20 +6,24 @@ const cancelBtn = document.getElementById("cancel");
 const trashSelect = document.getElementById("trashSelect");
 const monthLabel = document.getElementById("monthLabel");
 
+let db = window.db;
+let fDoc = window.fDoc;
+let fSet = window.fSet;
+let fGet = window.fGet;
+
 let currentMonth = new Date().getMonth() + 1;
 let currentYear = new Date().getFullYear();
 
 let selectedDay = null;
 let selectedColor = "#E8A0B8";
 
-let events = JSON.parse(localStorage.getItem("events")) || {};
-let trashOverrides = JSON.parse(localStorage.getItem("trash")) || {};
+let events = {};
+let trashOverrides = {};
 
 function getKey() {
   return `${currentYear}-${currentMonth}`;
 }
 
-// 色選択
 document.querySelectorAll(".color").forEach(el => {
   el.onclick = () => {
     document.querySelectorAll(".color").forEach(c => c.classList.remove("selected"));
@@ -28,29 +32,41 @@ document.querySelectorAll(".color").forEach(el => {
   };
 });
 
-// ゴミルール
 function getTrash(day, weekday) {
   const week = Math.ceil(day / 7);
 
-  // 月曜
   if (weekday === 1) return "♻️";
-
-  // 火・木
   if (weekday === 2 || weekday === 4) return "🔥";
 
-  // 水曜
   if (weekday === 3) {
     if (week === 1 || week === 3) return "🍾🥫";
     if (week === 2 || week === 4) return "🔋🪥";
   }
 
-  // 金曜
   if (weekday === 5) {
     if (week === 2) return "👔";
     if (week === 4) return "📦";
   }
 
   return "";
+}
+
+async function loadData() {
+  const ref = fDoc(db, "calendar", "shared");
+  const snap = await fGet(ref);
+
+  if (snap.exists()) {
+    const data = snap.data();
+    events = data.events || {};
+    trashOverrides = data.trashOverrides || {};
+  }
+}
+
+async function saveData() {
+  await fSet(fDoc(db, "calendar", "shared"), {
+    events,
+    trashOverrides
+  });
 }
 
 function renderCalendar() {
@@ -97,56 +113,28 @@ function renderCalendar() {
       day.appendChild(t);
     }
 
-    // 予定表示
-// 予定表示（削除付き）
-if (events[key]?.[i]) {
-  events[key][i].forEach((e, index) => {
-    const ev = document.createElement("div");
-    ev.className = "event";
-    ev.style.background = e.color;
-    ev.textContent = e.title;
+    if (events[key]?.[i]) {
+      events[key][i].forEach((e, index) => {
+        const ev = document.createElement("div");
+        ev.className = "event";
+        ev.style.background = e.color;
+        ev.textContent = e.title;
 
-    // 👇 クリックで削除（PC）
-    ev.onclick = (event) => {
-      event.stopPropagation();
+        ev.onclick = async (event) => {
+          event.stopPropagation();
+          if (!confirm("削除する？")) return;
 
-      if (!confirm("削除する？")) return;
+          events[key][i].splice(index, 1);
+          await saveData();
+          renderCalendar();
+        };
 
-      events[key][i].splice(index, 1);
-      localStorage.setItem("events", JSON.stringify(events));
-      renderCalendar();
-    };
-
-    // 👇 スマホ用（タップでも反応）
-    ev.addEventListener("touchend", (event) => {
-      event.stopPropagation();
-
-      if (!confirm("削除する？")) return;
-
-      events[key][i].splice(index, 1);
-      localStorage.setItem("events", JSON.stringify(events));
-      renderCalendar();
-    });
-
-    day.appendChild(ev);
-  });
-}
-
-    // ダブルタップ
-    let lastTap = 0;
-    day.addEventListener("touchend", () => {
-      const now = Date.now();
-      if (now - lastTap < 300) {
-        selectedDay = i;
-        titleInput.value = "";
-        modal.classList.remove("hidden");
-      }
-      lastTap = now;
-    });
+        day.appendChild(ev);
+      });
+    }
 
     day.ondblclick = () => {
       selectedDay = i;
-      titleInput.value = "";
       modal.classList.remove("hidden");
     };
 
@@ -154,13 +142,11 @@ if (events[key]?.[i]) {
   }
 }
 
-// 保存（分離版）
-saveBtn.onclick = () => {
+saveBtn.onclick = async () => {
   const key = getKey();
   const tKey = `${key}-${selectedDay}`;
   const title = titleInput.value.trim();
 
-  // 👉 ① 予定はタイトルある時だけ追加
   if (title !== "") {
     if (!events[key]) events[key] = {};
     if (!events[key][selectedDay]) events[key][selectedDay] = [];
@@ -171,23 +157,19 @@ saveBtn.onclick = () => {
     });
   }
 
-  // 👉 ② ゴミは常に更新
   if (trashSelect.value === "") {
     delete trashOverrides[tKey];
   } else {
     trashOverrides[tKey] = trashSelect.value;
   }
 
-  localStorage.setItem("events", JSON.stringify(events));
-  localStorage.setItem("trash", JSON.stringify(trashOverrides));
-
+  await saveData();
   modal.classList.add("hidden");
   renderCalendar();
 };
 
 cancelBtn.onclick = () => modal.classList.add("hidden");
 
-// 月移動
 document.getElementById("prev").onclick = () => {
   currentMonth--;
   if (currentMonth < 1) {
@@ -206,4 +188,7 @@ document.getElementById("next").onclick = () => {
   renderCalendar();
 };
 
-renderCalendar();
+(async () => {
+  await loadData();
+  renderCalendar();
+})();
