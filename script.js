@@ -30,18 +30,26 @@ document.querySelectorAll(".color").forEach(el => {
 
 // ゴミルール
 function getTrash(day, weekday) {
+  const week = Math.ceil(day / 7);
+
+  // 月曜
+  if (weekday === 1) return "♻️";
+
+  // 火・木
   if (weekday === 2 || weekday === 4) return "🔥";
+
+  // 水曜
   if (weekday === 3) {
-    const w = Math.ceil(day / 7);
-    if (w === 1 || w === 3) return "🍾🥫";
-    if (w === 2 || w === 4) return "🔋🪥";
-    return "♻️";
+    if (week === 1 || week === 3) return "🍾🥫";
+    if (week === 2 || week === 4) return "🔋🪥";
   }
+
+  // 金曜
   if (weekday === 5) {
-    const w = Math.ceil(day / 7);
-    if (w === 2) return "👔";
-    if (w === 4) return "📦";
+    if (week === 2) return "👔";
+    if (week === 4) return "📦";
   }
+
   return "";
 }
 
