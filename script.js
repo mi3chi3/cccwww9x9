@@ -1,194 +1,119 @@
-const calendar = document.getElementById("calendar");
+const cal = document.getElementById("calendar");
 const modal = document.getElementById("modal");
 const titleInput = document.getElementById("title");
-const saveBtn = document.getElementById("save");
-const cancelBtn = document.getElementById("cancel");
-const trashSelect = document.getElementById("trashSelect");
-const monthLabel = document.getElementById("monthLabel");
 
 let db = window.db;
 let fDoc = window.fDoc;
 let fSet = window.fSet;
 let fGet = window.fGet;
 
-let currentMonth = new Date().getMonth() + 1;
-let currentYear = new Date().getFullYear();
+let month = new Date().getMonth()+1;
+let year = new Date().getFullYear();
 
 let selectedDay = null;
-let selectedColor = "#E8A0B8";
-
+let color = "#E8A0B8";
 let events = {};
-let trashOverrides = {};
 
-function getKey() {
-  return `${currentYear}-${currentMonth}`;
-}
+function key(){ return `${year}-${month}` }
 
-document.querySelectorAll(".color").forEach(el => {
-  el.onclick = () => {
-    document.querySelectorAll(".color").forEach(c => c.classList.remove("selected"));
-    el.classList.add("selected");
-    selectedColor = el.dataset.color;
-  };
+document.querySelectorAll(".color").forEach(c=>{
+  c.onclick=()=>{
+    document.querySelectorAll(".color").forEach(x=>x.classList.remove("selected"));
+    c.classList.add("selected");
+    color=c.getAttribute("data");
+  }
 });
 
-function getTrash(day, weekday) {
-  const week = Math.ceil(day / 7);
-
-  if (weekday === 1) return "♻️";
-  if (weekday === 2 || weekday === 4) return "🔥";
-
-  if (weekday === 3) {
-    if (week === 1 || week === 3) return "🍾🥫";
-    if (week === 2 || week === 4) return "🔋🪥";
-  }
-
-  if (weekday === 5) {
-    if (week === 2) return "👔";
-    if (week === 4) return "📦";
-  }
-
-  return "";
-}
-
-async function loadData() {
-  const ref = fDoc(db, "calendar", "shared");
-  const snap = await fGet(ref);
-
-  if (snap.exists()) {
-    const data = snap.data();
-    events = data.events || {};
-    trashOverrides = data.trashOverrides || {};
+async function load(){
+  const snap = await fGet(fDoc(db,"calendar","shared"));
+  if(snap.exists()){
+    events = snap.data().events || {};
   }
 }
 
-async function saveData() {
-  await fSet(fDoc(db, "calendar", "shared"), {
-    events,
-    trashOverrides
-  });
+async function save(){
+  await fSet(fDoc(db,"calendar","shared"),{events});
 }
 
-function renderCalendar() {
-  calendar.innerHTML = "";
-  monthLabel.innerText = `${currentYear}年${currentMonth}月`;
+function render(){
+  cal.innerHTML="";
+  document.getElementById("month").innerText=`${year}/${month}`;
 
-  const firstDay = (new Date(currentYear, currentMonth - 1, 1).getDay() + 6) % 7;
-  const lastDate = new Date(currentYear, currentMonth, 0).getDate();
-  const today = new Date();
-  const key = getKey();
+  let first=(new Date(year,month-1,1).getDay()+6)%7;
+  let last=new Date(year,month,0).getDate();
+  let today=new Date();
 
-  for (let i = 0; i < firstDay; i++) {
-    calendar.appendChild(document.createElement("div"));
-  }
+  for(let i=0;i<first;i++) cal.appendChild(document.createElement("div"));
 
-  for (let i = 1; i <= lastDate; i++) {
-    const day = document.createElement("div");
-    day.className = "day";
+  for(let d=1;d<=last;d++){
+    let div=document.createElement("div");
+    div.className="day";
+    div.innerText=d;
 
-    const dateEl = document.createElement("div");
-    dateEl.className = "date";
-    dateEl.innerText = i;
-
-    if (
-      i === today.getDate() &&
-      currentMonth === today.getMonth() + 1 &&
-      currentYear === today.getFullYear()
-    ) {
-      day.classList.add("today");
+    if(d===today.getDate() && month===today.getMonth()+1) {
+      div.classList.add("today");
     }
 
-    day.appendChild(dateEl);
+    if(events[key()]?.[d]){
+      events[key()][d].forEach((e,i)=>{
+        let ev=document.createElement("div");
+        ev.className="event";
+        ev.style.background=e.color;
+        ev.innerText=e.title;
 
-    const date = new Date(currentYear, currentMonth - 1, i);
-    const weekday = date.getDay();
+        ev.onclick=async (x)=>{
+          x.stopPropagation();
+          if(confirm("削除する？")){
+            events[key()][d].splice(i,1);
+            await save();
+            render();
+          }
+        }
 
-    const override = trashOverrides[`${key}-${i}`];
-    const trash = override !== undefined ? override : getTrash(i, weekday);
-
-    if (trash) {
-      const t = document.createElement("div");
-      t.className = "trash";
-      t.textContent = trash;
-      day.appendChild(t);
-    }
-
-    if (events[key]?.[i]) {
-      events[key][i].forEach((e, index) => {
-        const ev = document.createElement("div");
-        ev.className = "event";
-        ev.style.background = e.color;
-        ev.textContent = e.title;
-
-        ev.onclick = async (event) => {
-          event.stopPropagation();
-          if (!confirm("削除する？")) return;
-
-          events[key][i].splice(index, 1);
-          await saveData();
-          renderCalendar();
-        };
-
-        day.appendChild(ev);
+        div.appendChild(ev);
       });
     }
 
-    day.ondblclick = () => {
-      selectedDay = i;
+    div.ondblclick=()=>{
+      selectedDay=d;
       modal.classList.remove("hidden");
-    };
+    }
 
-    calendar.appendChild(day);
+    cal.appendChild(div);
   }
 }
 
-saveBtn.onclick = async () => {
-  const key = getKey();
-  const tKey = `${key}-${selectedDay}`;
-  const title = titleInput.value.trim();
+document.getElementById("save").onclick=async ()=>{
+  if(!selectedDay) return;
 
-  if (title !== "") {
-    if (!events[key]) events[key] = {};
-    if (!events[key][selectedDay]) events[key][selectedDay] = [];
+  if(!events[key()]) events[key()]={};
+  if(!events[key()][selectedDay]) events[key()][selectedDay]=[];
 
-    events[key][selectedDay].push({
-      title,
-      color: selectedColor
-    });
-  }
+  events[key()][selectedDay].push({
+    title:titleInput.value,
+    color
+  });
 
-  if (trashSelect.value === "") {
-    delete trashOverrides[tKey];
-  } else {
-    trashOverrides[tKey] = trashSelect.value;
-  }
-
-  await saveData();
+  await save();
   modal.classList.add("hidden");
-  renderCalendar();
+  render();
 };
 
-cancelBtn.onclick = () => modal.classList.add("hidden");
-
-document.getElementById("prev").onclick = () => {
-  currentMonth--;
-  if (currentMonth < 1) {
-    currentMonth = 12;
-    currentYear--;
-  }
-  renderCalendar();
+document.getElementById("close").onclick=()=>{
+  modal.classList.add("hidden");
 };
 
-document.getElementById("next").onclick = () => {
-  currentMonth++;
-  if (currentMonth > 12) {
-    currentMonth = 1;
-    currentYear++;
-  }
-  renderCalendar();
+document.getElementById("prev").onclick=()=>{
+  month--; if(month<1){month=12;year--;}
+  render();
 };
 
-(async () => {
-  await loadData();
-  renderCalendar();
+document.getElementById("next").onclick=()=>{
+  month++; if(month>12){month=1;year++;}
+  render();
+};
+
+(async ()=>{
+  await load();
+  render();
 })();
