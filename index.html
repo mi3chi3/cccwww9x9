@@ -11,82 +11,176 @@ body {font-family:sans-serif;margin:0;background:#fffef5;}
 .week,.calendar{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;}
 .calendar{padding:10px;gap:6px;}
 
-.day{background:white;border-radius:12px;height:95px;padding:5px;position:relative;}
-.date{width:24px;height:24px;border-radius:50%;line-height:24px;margin:auto;}
-.today .date{background:red;color:white;}
+.day{
+  background:white;
+  border-radius:12px;
+  height:95px;
+  padding:5px;
+  position:relative;
+}
 
-.event{margin-top:4px;border-radius:6px;font-size:12px;padding:2px;color:white;}
+.date{
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  line-height:24px;
+  margin:auto;
+}
+
+.today .date{
+  background:red;
+  color:white;
+}
+
+.event{
+  margin-top:4px;
+  border-radius:6px;
+  font-size:12px;
+  padding:2px;
+  color:white;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
 
 .nextTrash{
-  position:absolute;bottom:6px;right:6px;
-  width:14px;height:14px;border-radius:50%;
+  position:absolute;
+  bottom:6px;
+  right:6px;
+  width:14px;
+  height:14px;
+  border-radius:50%;
   background:rgba(100,150,255,0.4);
 }
 
-.modal{position:fixed;inset:0;display:flex;justify-content:center;align-items:center;background:rgba(0,0,0,0.3);}
-.hidden{display:none;}
-.box{background:white;padding:20px;border-radius:12px;width:90%;max-width:300px;}
+.modal{
+  position:fixed;
+  inset:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:rgba(0,0,0,0.3);
+  z-index:1000;
+}
 
-.colors{display:flex;gap:10px;margin:10px 0;}
-.color{width:30px;height:30px;border-radius:50%;}
+.hidden{display:none;}
+
+.box{
+  background:white;
+  padding:20px;
+  border-radius:12px;
+  width:90%;
+  max-width:300px;
+}
+
+.colors{
+  display:flex;
+  gap:10px;
+  margin:10px 0;
+}
+
+.color{
+  width:30px;
+  height:30px;
+  border-radius:50%;
+  flex:0 0 auto;
+}
+
 .selected{outline:3px solid black;}
 
-textarea{width:100%;margin-top:5px;}
+textarea{
+  width:100%;
+  min-height:80px;
+  margin-top:5px;
+  box-sizing:border-box;
+}
+
+button, select, input, textarea{
+  font:inherit;
+}
+
+#save, #trashSave{
+  margin-top:10px;
+}
+
+#delete{
+  margin-top:10px;
+  background:#ff4d4d;
+  color:white;
+  border:none;
+  padding:8px 12px;
+  border-radius:6px;
+}
+
+#save, #close, #trashSave, #trashClose{
+  border:none;
+  padding:8px 12px;
+  border-radius:6px;
+}
+
+#save, #trashSave{
+  background:#333;
+  color:white;
+}
+
+#close, #trashClose{
+  background:#ddd;
+}
 </style>
 </head>
 
 <body>
 
 <div class="header">
-<button id="prev">◀</button>
-<div id="month"></div>
-<button id="next">▶</button>
+  <button id="prev">◀</button>
+  <div id="month"></div>
+  <button id="next">▶</button>
 </div>
 
 <div class="week">
-<div>月</div><div>火</div><div>水</div>
-<div>木</div><div>金</div><div>土</div><div>日</div>
+  <div>月</div><div>火</div><div>水</div>
+  <div>木</div><div>金</div><div>土</div><div>日</div>
 </div>
 
 <div id="calendar" class="calendar"></div>
 
-<!-- イベント -->
-<div id="modal" class="modal hidden">
-<div class="box">
-<input id="title" placeholder="タイトル">
+<!-- イベントモーダル -->
+<div id="eventModal" class="modal hidden">
+  <div class="box">
+    <input id="title" placeholder="タイトル">
 
-<div class="colors">
-<div class="color selected" data="#fa9bbb" style="background:#fa9bbb"></div>
-<div class="color" data="#9bd5fa" style="background:#9bd5fa"></div>
-<div class="color" data="#dca8ff" style="background:#dca8ff"></div>
-<div class="color" data="#000000" style="background:#000000"></div>
+    <div class="colors">
+      <div class="color selected" data-color="#fa9bbb" style="background:#fa9bbb"></div>
+      <div class="color" data-color="#9bd5fa" style="background:#9bd5fa"></div>
+      <div class="color" data-color="#dca8ff" style="background:#dca8ff"></div>
+      <div class="color" data-color="#000000" style="background:#000000"></div>
+    </div>
+
+    <textarea id="memo" placeholder="メモ"></textarea>
+
+    <button id="save">保存</button>
+    <button id="delete" style="display:none;">削除</button>
+    <button id="close">戻る</button>
+  </div>
 </div>
 
-<textarea id="memo" placeholder="メモ"></textarea>
-
-<button id="save">保存</button>
-<button id="close">戻る</button>
-</div>
-</div>
-
-<!-- ゴミ -->
+<!-- ゴミモーダル -->
 <div id="trashModal" class="modal hidden">
-<div class="box">
-<div id="trashText"></div>
+  <div class="box">
+    <div id="trashText"></div>
 
-<select id="trashSelect">
-<option value="">変更なし</option>
+    <select id="trashSelect">
 <option value="🔥">🔥</option>
 <option value="プラ">プラ</option>
 <option value="ビン・カン">ビン・カン</option>
 <option value="電池・破砕">電池・破砕</option>
 <option value="古着・家電">古着・家電</option>
 <option value="📦">📦</option>
-</select>
+    </select>
 
-<button id="trashSave">保存</button>
-<button id="trashClose">戻る</button>
-</div>
+    <button id="trashSave">保存</button>
+    <button id="trashClose">戻る</button>
+  </div>
 </div>
 
 <script type="module">
@@ -94,30 +188,67 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/fireba
 import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const app = initializeApp({
-  apiKey:"AIzaSy...",
-  authDomain:"myc2-fe880.firebaseapp.com",
-  projectId:"myc2-fe880"
+  apiKey: "AIzaSyDLlxAgxvT94--DAiErKdhGsb6-mX8bA8s",
+  authDomain: "myc2-fe880.firebaseapp.com",
+  projectId: "myc2-fe880",
+  storageBucket: "myc2-fe880.firebasestorage.app",
+  messagingSenderId: "691622220518",
+  appId: "1:691622220518:web:505cc34778cddf91d5e127"
 });
+
 const db = getFirestore(app);
 
-let month=new Date().getMonth()+1;
-let year=new Date().getFullYear();
-let selectedDay=null;
-let editingIndex=null;
-let color="#E8A0B8";
+const cal = document.getElementById("calendar");
+const eventModal = document.getElementById("eventModal");
+const trashModal = document.getElementById("trashModal");
+const titleInput = document.getElementById("title");
+const memoInput = document.getElementById("memo");
+const deleteBtn = document.getElementById("delete");
+const colorEls = document.querySelectorAll(".color");
 
-let events={};
-let trashOverrides={};
+let month = new Date().getMonth() + 1;
+let year = new Date().getFullYear();
 
-function key(){return `${year}-${month}`;}
-function tkey(d){return `${key()}-${d}`;}
+let selectedDay = null;
+let editingIndex = null;
+let color = "#E8A0B8";
 
-document.querySelectorAll(".color").forEach(c=>{
-  c.onclick=()=>{
-    document.querySelectorAll(".color").forEach(x=>x.classList.remove("selected"));
-    c.classList.add("selected");
-    color=c.getAttribute("data");
-  }
+let events = {};
+let trashOverrides = {};
+
+function key() {
+  return `${year}-${month}`;
+}
+
+function tkey(d) {
+  return `${key()}-${d}`;
+}
+
+function openEventModal() {
+  eventModal.classList.remove("hidden");
+}
+
+function closeEventModal() {
+  eventModal.classList.add("hidden");
+}
+
+function openTrashModal() {
+  trashModal.classList.remove("hidden");
+}
+
+function closeTrashModal() {
+  trashModal.classList.add("hidden");
+}
+
+function setSelectedColor(nextColor) {
+  color = nextColor || "#E8A0B8";
+  colorEls.forEach(c => {
+    c.classList.toggle("selected", c.getAttribute("data-color") === color);
+  });
+}
+
+colorEls.forEach(c => {
+  c.onclick = () => setSelectedColor(c.getAttribute("data-color"));
 });
 
 function getTrash(day){
@@ -138,133 +269,183 @@ function getTrash(day){
   return"";
 }
 
-onSnapshot(doc(db,"calendar","shared"),snap=>{
-  if(snap.exists()){
-    let d=snap.data();
-    events=d.events||{};
-    trashOverrides=d.trashOverrides||{};
+onSnapshot(doc(db, "calendar", "shared"), (snap) => {
+  if (snap.exists()) {
+    const data = snap.data();
+    events = data.events || {};
+    trashOverrides = data.trashOverrides || {};
     render();
   }
 });
 
-async function save(){
-  await setDoc(doc(db,"calendar","shared"),{events,trashOverrides},{merge:true});
+async function save() {
+  await setDoc(
+    doc(db, "calendar", "shared"),
+    { events, trashOverrides },
+    { merge: true }
+  );
 }
 
-function render(){
-  let cal=document.getElementById("calendar");
-  cal.innerHTML="";
-  document.getElementById("month").innerText=`${year}/${month}`;
+function render() {
+  cal.innerHTML = "";
+  document.getElementById("month").innerText = `${year}/${month}`;
 
-  let first=(new Date(year,month-1,1).getDay()+6)%7;
-  let last=new Date(year,month,0).getDate();
-  let today=new Date();
+  const first = (new Date(year, month - 1, 1).getDay() + 6) % 7;
+  const last = new Date(year, month, 0).getDate();
+  const today = new Date();
 
-  for(let i=0;i<first;i++)cal.appendChild(document.createElement("div"));
+  for (let i = 0; i < first; i++) {
+    cal.appendChild(document.createElement("div"));
+  }
 
-  for(let d=1;d<=last;d++){
-    let div=document.createElement("div");
-    div.className="day";
+  for (let d = 1; d <= last; d++) {
+    const div = document.createElement("div");
+    div.className = "day";
 
-    let date=document.createElement("div");
-    date.className="date";
-    date.innerText=d;
+    const date = document.createElement("div");
+    date.className = "date";
+    date.innerText = d;
 
-    if(d===today.getDate()&&month===today.getMonth()+1&&year===today.getFullYear()){
+    if (
+      d === today.getDate() &&
+      month === today.getMonth() + 1 &&
+      year === today.getFullYear()
+    ) {
       div.classList.add("today");
     }
 
     div.appendChild(date);
 
-    if(events[key()]?.[d]){
-      events[key()][d].forEach((e,i)=>{
-        let ev=document.createElement("div");
-        ev.className="event";
-        ev.style.background=e.color||"#999";
-        ev.innerText=e.title;
+    if (events[key()]?.[d]) {
+      events[key()][d].forEach((e, i) => {
+        const ev = document.createElement("div");
+        ev.className = "event";
+        ev.style.background = e.color || "#999";
+        ev.innerText = e.title || "(無題)";
 
-        ev.onclick=(x)=>{
+        ev.onclick = (x) => {
           x.stopPropagation();
-          selectedDay=d;
-          editingIndex=i;
+          selectedDay = d;
+          editingIndex = i;
 
-          document.getElementById("title").value=e.title;
-          document.getElementById("memo").value=e.memo||"";
-          color=e.color||"#E8A0B8";
+          titleInput.value = e.title || "";
+          memoInput.value = e.memo || "";
+          setSelectedColor(e.color || "#E8A0B8");
 
-          document.querySelectorAll(".color").forEach(c=>{
-            c.classList.remove("selected");
-            if(c.getAttribute("data")===color) c.classList.add("selected");
-          });
-
-          modal.classList.remove("hidden");
+          deleteBtn.style.display = "block";
+          openEventModal();
         };
 
         div.appendChild(ev);
       });
     }
 
-    let next=d+1;
-    if(next<=last){
-      let val=trashOverrides[tkey(next)]??getTrash(next);
-      if(val){
-        let dot=document.createElement("div");
-        dot.className="nextTrash";
-        dot.onclick=(e)=>{
+    const next = d + 1;
+    if (next <= last) {
+      const val = trashOverrides[tkey(next)] ?? getTrash(next);
+      if (val) {
+        const dot = document.createElement("div");
+        dot.className = "nextTrash";
+        dot.onclick = (e) => {
           e.stopPropagation();
-          selectedDay=next;
-          document.getElementById("trashText").innerText=`翌日のゴミ：${val}`;
-          trashModal.classList.remove("hidden");
+          selectedDay = next;
+          document.getElementById("trashText").innerText = `翌日のゴミ：${val}`;
+          const select = document.getElementById("trashSelect");
+          select.value = trashOverrides[tkey(next)] || "";
+          openTrashModal();
         };
         div.appendChild(dot);
       }
     }
 
-    div.ondblclick=()=>{
-      selectedDay=d;
-      editingIndex=null;
-      document.getElementById("title").value="";
-      document.getElementById("memo").value="";
-      modal.classList.remove("hidden");
+    div.ondblclick = () => {
+      selectedDay = d;
+      editingIndex = null;
+      titleInput.value = "";
+      memoInput.value = "";
+      setSelectedColor("#E8A0B8");
+      deleteBtn.style.display = "none";
+      openEventModal();
     };
 
     cal.appendChild(div);
   }
 }
 
-// ✅ 修正済みここ
-document.getElementById("save").onclick=async()=>{
-  let k=key();
-  let titleVal=document.getElementById("title").value;
-  let memoVal=document.getElementById("memo").value;
+document.getElementById("save").onclick = async () => {
+  const k = key();
+  const titleVal = titleInput.value.trim();
+  const memoVal = memoInput.value;
 
-  if(!events[k])events[k]={};
-  if(!events[k][selectedDay])events[k][selectedDay]=[];
+  if (!titleVal) return;
 
-  if(editingIndex!==null){
-    events[k][selectedDay][editingIndex]={title:titleVal,memo:memoVal,color};
-  }else{
-    events[k][selectedDay].push({title:titleVal,memo:memoVal,color});
+  if (!events[k]) events[k] = {};
+  if (!events[k][selectedDay]) events[k][selectedDay] = [];
+
+  const obj = { title: titleVal, memo: memoVal, color };
+
+  if (editingIndex !== null) {
+    events[k][selectedDay][editingIndex] = obj;
+  } else {
+    events[k][selectedDay].push(obj);
   }
 
   await save();
-  modal.classList.add("hidden");
+  closeEventModal();
 };
 
-document.getElementById("trashSave").onclick=async()=>{
-  let val=document.getElementById("trashSelect").value;
-  if(val==="") delete trashOverrides[tkey(selectedDay)];
-  else trashOverrides[tkey(selectedDay)]=val;
+deleteBtn.onclick = async () => {
+  if (editingIndex === null) return;
+  if (!confirm("削除する？")) return;
+
+  const k = key();
+  if (!events[k] || !events[k][selectedDay]) return;
+
+  events[k][selectedDay].splice(editingIndex, 1);
+
+  if (events[k][selectedDay].length === 0) {
+    delete events[k][selectedDay];
+  }
+  if (Object.keys(events[k]).length === 0) {
+    delete events[k];
+  }
+
+  editingIndex = null;
+  await save();
+  closeEventModal();
+};
+
+document.getElementById("trashSave").onclick = async () => {
+  const val = document.getElementById("trashSelect").value;
+  if (val === "") delete trashOverrides[tkey(selectedDay)];
+  else trashOverrides[tkey(selectedDay)] = val;
 
   await save();
-  trashModal.classList.add("hidden");
+  closeTrashModal();
 };
 
-document.getElementById("close").onclick=()=>modal.classList.add("hidden");
-document.getElementById("trashClose").onclick=()=>trashModal.classList.add("hidden");
+document.getElementById("close").onclick = () => closeEventModal();
+document.getElementById("trashClose").onclick = () => closeTrashModal();
 
-document.getElementById("prev").onclick=()=>{month--;if(month<1){month=12;year--;}render();}
-document.getElementById("next").onclick=()=>{month++;if(month>12){month=1;year++;}render();}
+document.getElementById("prev").onclick = () => {
+  month--;
+  if (month < 1) {
+    month = 12;
+    year--;
+  }
+  render();
+};
+
+document.getElementById("next").onclick = () => {
+  month++;
+  if (month > 12) {
+    month = 1;
+    year++;
+  }
+  render();
+};
+
+render();
 </script>
 
 </body>
