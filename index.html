@@ -8,12 +8,7 @@
 <style>
 body {font-family:sans-serif;margin:0;background:#F7F4F2;}
 
-.header{
-  display:flex;
-  justify-content:center;
-  gap:20px;
-  padding:10px;
-}
+.header{display:flex;justify-content:center;gap:20px;padding:10px;}
 
 .week,.calendar{
   display:grid;
@@ -26,31 +21,17 @@ body {font-family:sans-serif;margin:0;background:#F7F4F2;}
 .day{
   background:white;
   border-radius:12px;
-  height:90px;
+  height:95px;
   padding:5px;
   position:relative;
 }
 
 .date{
-  width:24px;
-  height:24px;
-  border-radius:50%;
-  line-height:24px;
-  margin:auto;
+  width:24px;height:24px;border-radius:50%;
+  line-height:24px;margin:auto;
 }
 
-.today .date{
-  background:red;
-  color:white;
-}
-
-.trash{
-  position:absolute;
-  top:4px;
-  right:4px;
-  opacity:0.4;
-  font-size:12px;
-}
+.today .date{background:red;color:white;}
 
 .event{
   margin-top:4px;
@@ -60,47 +41,31 @@ body {font-family:sans-serif;margin:0;background:#F7F4F2;}
   color:white;
 }
 
+.nextTrash{
+  position:absolute;
+  bottom:6px;
+  right:6px;
+  width:14px;
+  height:14px;
+  border-radius:50%;
+  background:rgba(100,150,255,0.4);
+}
+
 .modal{
-  position:fixed;
-  inset:0;
-  display:flex;
-  justify-content:center;
-  align-items:center;
+  position:fixed;inset:0;
+  display:flex;justify-content:center;align-items:center;
   background:rgba(0,0,0,0.3);
 }
 
 .hidden{display:none;}
 
 .box{
-  background:white;
-  padding:20px;
-  border-radius:12px;
-  width:90%;
-  max-width:300px;
+  background:white;padding:20px;border-radius:12px;
+  width:90%;max-width:300px;
 }
 
-.colors{
-  display:flex;
-  gap:10px;
-  margin:10px 0;
-}
+textarea{width:100%;margin-top:5px;}
 
-.color{
-  width:32px;
-  height:32px;
-  border-radius:50%;
-}
-
-.selected{outline:3px solid black;}
-
-#delete{
-  margin-top:10px;
-  background:#ff4d4d;
-  color:white;
-  border:none;
-  padding:6px 10px;
-  border-radius:6px;
-}
 </style>
 </head>
 
@@ -119,20 +84,33 @@ body {font-family:sans-serif;margin:0;background:#F7F4F2;}
 
 <div id="calendar" class="calendar"></div>
 
+<!-- イベントモーダル -->
 <div id="modal" class="modal hidden">
 <div class="box">
 <input id="title" placeholder="タイトル">
-
-<div class="colors">
-<div class="color selected" data="#E8A0B8" style="background:#E8A0B8"></div>
-<div class="color" data="#7EC3D8" style="background:#7EC3D8"></div>
-<div class="color" data="#F5D547" style="background:#F5D547"></div>
-<div class="color" data="#A8E6CF" style="background:#A8E6CF"></div>
-</div>
-
+<textarea id="memo" placeholder="メモ"></textarea>
 <button id="save">保存</button>
 <button id="close">戻る</button>
-<button id="delete" style="display:none;">削除</button>
+</div>
+</div>
+
+<!-- ゴミモーダル -->
+<div id="trashModal" class="modal hidden">
+<div class="box">
+<div id="trashText"></div>
+
+<select id="trashSelect">
+<option value="">変更なし</option>
+<option value="🔥">🔥</option>
+<option value="♻️">♻️</option>
+<option value="🍾🥫">🍾🥫</option>
+<option value="🔋🪥">🔋🪥</option>
+<option value="👔">👔</option>
+<option value="📦">📦</option>
+</select>
+
+<button id="trashSave">変更保存</button>
+<button id="trashClose">戻る</button>
 </div>
 </div>
 
@@ -140,104 +118,103 @@ body {font-family:sans-serif;margin:0;background:#F7F4F2;}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDLlxAgxvT94--DAiErKdhGsb6-mX8bA8s",
+const app = initializeApp({
+  apiKey: "AIzaSy...",
   authDomain: "myc2-fe880.firebaseapp.com",
-  projectId: "myc2-fe880",
-  storageBucket: "myc2-fe880.firebasestorage.app",
-  messagingSenderId: "691622220518",
-  appId: "1:691622220518:web:505cc34778cddf91d5e127"
-};
+  projectId: "myc2-fe880"
+});
 
-const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let month=new Date().getMonth()+1;
 let year=new Date().getFullYear();
+
 let selectedDay=null;
 let editingIndex=null;
-let color="#E8A0B8";
 
 let events={};
-
-const cal=document.getElementById("calendar");
+let trashOverrides={};
 
 function key(){return `${year}-${month}`;}
+function tkey(d){return `${key()}-${d}`;}
 
-// 色選択（修正済み）
-document.querySelectorAll(".color").forEach(c=>{
-  c.onclick=()=>{
-    document.querySelectorAll(".color").forEach(x=>x.classList.remove("selected"));
-    c.classList.add("selected");
-    color=c.getAttribute("data");
+function getTrash(day){
+  let date=new Date(year,month-1,day);
+  let wd=date.getDay(); // 0日〜6土
+  let week=Math.ceil(day/7);
+
+  if(wd===1)return"♻️";
+  if(wd===2||wd===4)return"🔥";
+
+  if(wd===3){
+    if(week===1||week===3)return"🍾🥫";
+    if(week===2||week===4)return"🔋🪥";
+  }
+
+  if(wd===5){
+    if(week===2)return"👔";
+    if(week===4)return"📦";
+  }
+
+  return"";
+}
+
+// realtime
+onSnapshot(doc(db,"calendar","shared"),snap=>{
+  if(snap.exists()){
+    let d=snap.data();
+    events=d.events||{};
+    trashOverrides=d.trashOverrides||{};
+    render();
   }
 });
 
-// リアルタイム監視
-function subscribe(){
-  onSnapshot(doc(db,"calendar","shared"), (snap)=>{
-    if(snap.exists()){
-      const data=snap.data();
-      events=data.events||{};
-      render();
-    }
-  });
-}
-
-// 保存
 async function save(){
-  if (!selectedDay) return;
-
-  await setDoc(
-    doc(db,"calendar","shared"),
-    { events },
-    { merge: true }
-  );
+  await setDoc(doc(db,"calendar","shared"),{events,trashOverrides},{merge:true});
 }
 
-// 描画
 function render(){
+  let cal=document.getElementById("calendar");
   cal.innerHTML="";
   document.getElementById("month").innerText=`${year}/${month}`;
 
   let first=(new Date(year,month-1,1).getDay()+6)%7;
   let last=new Date(year,month,0).getDate();
-  let today=new Date();
-  const k=key();
 
-  for(let i=0;i<first;i++) cal.appendChild(document.createElement("div"));
+  for(let i=0;i<first;i++)cal.appendChild(document.createElement("div"));
 
   for(let d=1;d<=last;d++){
     let div=document.createElement("div");
     div.className="day";
 
-    let date=document.createElement("div");
-    date.className="date";
-    date.innerText=d;
+let date=document.createElement("div");
+date.className="date";
+date.innerText=d;
 
-    if(d===today.getDate()&&month===today.getMonth()+1&&year===today.getFullYear()){
-      div.classList.add("today");
-    }
+let today=new Date();
+if(
+  d===today.getDate() &&
+  month===today.getMonth()+1 &&
+  year===today.getFullYear()
+){
+  div.classList.add("today");
+}
 
-    div.appendChild(date);
-
-    if(events[k]?.[d]){
-      events[k][d].forEach((e,i)=>{
+div.appendChild(date);
+    // イベント
+    if(events[key()]?.[d]){
+      events[key()][d].forEach((e,i)=>{
         let ev=document.createElement("div");
         ev.className="event";
-        ev.style.background=e.color || "#999";
-        ev.style.color="#fff";
+        ev.style.background=e.color||"#999";
         ev.innerText=e.title;
 
         ev.onclick=(x)=>{
           x.stopPropagation();
           selectedDay=d;
           editingIndex=i;
-
           document.getElementById("title").value=e.title;
-          color=e.color;
-
-          document.getElementById("delete").style.display="block";
+          document.getElementById("memo").value=e.memo||"";
           document.getElementById("modal").classList.remove("hidden");
         };
 
@@ -245,11 +222,30 @@ function render(){
       });
     }
 
+    // 翌日ゴミ
+    let next=d+1;
+    if(next<=last){
+      let val=trashOverrides[tkey(next)]??getTrash(next);
+      if(val){
+        let dot=document.createElement("div");
+        dot.className="nextTrash";
+
+        dot.onclick=(e)=>{
+          e.stopPropagation();
+          selectedDay=next;
+          document.getElementById("trashText").innerText=`翌日のゴミ：${val}`;
+          document.getElementById("trashModal").classList.remove("hidden");
+        };
+
+        div.appendChild(dot);
+      }
+    }
+
     div.ondblclick=()=>{
       selectedDay=d;
       editingIndex=null;
       document.getElementById("title").value="";
-      document.getElementById("delete").style.display="none";
+      document.getElementById("memo").value="";
       document.getElementById("modal").classList.remove("hidden");
     };
 
@@ -257,58 +253,42 @@ function render(){
   }
 }
 
-// 保存ボタン
+// イベント保存
 document.getElementById("save").onclick=async()=>{
-  const k=key();
-  const title=document.getElementById("title").value;
+  let k=key();
+  let title=document.getElementById("title").value;
+  let memo=document.getElementById("memo").value;
 
-  if(title){
-    if(!events[k])events[k]={};
-    if(!events[k][selectedDay])events[k][selectedDay]=[];
+  if(!events[k])events[k]={};
+  if(!events[k][selectedDay])events[k][selectedDay]=[];
 
-    if(editingIndex!==null){
-      events[k][selectedDay][editingIndex]={title,color};
-    }else{
-      events[k][selectedDay].push({title,color});
-    }
+  if(editingIndex!==null){
+    events[k][selectedDay][editingIndex]={title,memo};
+  }else{
+    events[k][selectedDay].push({title,memo});
   }
 
-  editingIndex=null;
-
   await save();
   document.getElementById("modal").classList.add("hidden");
 };
 
-// 削除
-document.getElementById("delete").onclick=async()=>{
-  if(editingIndex===null) return;
-
-  const k=key();
-  events[k][selectedDay].splice(editingIndex,1);
-
-  editingIndex=null;
+// ゴミ変更
+document.getElementById("trashSave").onclick=async()=>{
+  let val=document.getElementById("trashSelect").value;
+  if(val==="") delete trashOverrides[tkey(selectedDay)];
+  else trashOverrides[tkey(selectedDay)]=val;
 
   await save();
-  document.getElementById("modal").classList.add("hidden");
+  document.getElementById("trashModal").classList.add("hidden");
 };
 
-// UI操作
-document.getElementById("close").onclick=()=>{
-  document.getElementById("modal").classList.add("hidden");
-};
+// 閉じる系
+document.getElementById("close").onclick=()=>modal.classList.add("hidden");
+document.getElementById("trashClose").onclick=()=>trashModal.classList.add("hidden");
 
-document.getElementById("prev").onclick=()=>{
-  month--;if(month<1){month=12;year--;}
-  render();
-};
-
-document.getElementById("next").onclick=()=>{
-  month++;if(month>12){month=1;year++;}
-  render();
-};
-
-// 起動
-subscribe();
+// 月移動
+document.getElementById("prev").onclick=()=>{month--;if(month<1){month=12;year--;}render();}
+document.getElementById("next").onclick=()=>{month++;if(month>12){month=1;year++;}render();}
 </script>
 
 </body>
