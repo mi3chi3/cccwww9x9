@@ -125,8 +125,8 @@ function getTrash(day){
   let wd=date.getDay();
   let week=Math.ceil(day/7);
 
-  if(wd===1)return"🔥";
-  if(wd===2||wd===4)return"プラ";
+  if(wd===1||wd===4)return"🔥";
+  if(wd===2)return"プラ";
   if(wd===3){
     if(week===1||week===3)return"ビン・カン";
     if(week===2||week===4)return"電池・破砕";
