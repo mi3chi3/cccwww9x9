@@ -317,8 +317,7 @@ onSnapshot(doc(db, "calendar", "shared"), (snap) => {
 async function save() {
   await setDoc(
     doc(db, "calendar", "shared"),
-    { events, trashOverrides },
-    { merge: true }
+    { events, trashOverrides }
   );
 }
 
@@ -440,7 +439,6 @@ deleteBtn.onclick = async () => {
 
   const k = key();
   const dayEvents = events[k]?.[selectedDay];
-
   if (!Array.isArray(dayEvents)) return;
 
   events[k][selectedDay] = dayEvents.filter((_, idx) => idx !== editingIndex);
