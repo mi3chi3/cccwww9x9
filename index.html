@@ -6,7 +6,7 @@
 <title>Calendar</title>
 
 <style>
-body {font-family:sans-serif;margin:0;background:#F7F4F2;}
+body {font-family:sans-serif;margin:0;background:#fffef5;}
 .header{display:flex;justify-content:center;gap:20px;padding:10px;}
 .week,.calendar{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;}
 .calendar{padding:10px;gap:6px;}
@@ -56,10 +56,10 @@ textarea{width:100%;margin-top:5px;}
 <input id="title" placeholder="タイトル">
 
 <div class="colors">
-<div class="color selected" data="#E8A0B8" style="background:#E8A0B8"></div>
-<div class="color" data="#7EC3D8" style="background:#7EC3D8"></div>
-<div class="color" data="#F5D547" style="background:#F5D547"></div>
-<div class="color" data="#A8E6CF" style="background:#A8E6CF"></div>
+<div class="color selected" data="#fa9bbb" style="background:#fa9bbb"></div>
+<div class="color" data="#9bd5fa" style="background:#9bd5fa"></div>
+<div class="color" data="#dca8ff" style="background:#dca8ff"></div>
+<div class="color" data="#000000" style="background:#000000"></div>
 </div>
 
 <textarea id="memo" placeholder="メモ"></textarea>
@@ -77,10 +77,10 @@ textarea{width:100%;margin-top:5px;}
 <select id="trashSelect">
 <option value="">変更なし</option>
 <option value="🔥">🔥</option>
-<option value="♻️">♻️</option>
-<option value="🍾🥫">🍾🥫</option>
-<option value="🔋🪥">🔋🪥</option>
-<option value="👔">👔</option>
+<option value="プラ">プラ</option>
+<option value="ビン・カン">ビン・カン</option>
+<option value="電池・破砕">電池・破砕</option>
+<option value="古着・家電">古着・家電</option>
 <option value="📦">📦</option>
 </select>
 
@@ -125,14 +125,14 @@ function getTrash(day){
   let wd=date.getDay();
   let week=Math.ceil(day/7);
 
-  if(wd===1)return"♻️";
-  if(wd===2||wd===4)return"🔥";
+  if(wd===1)return"🔥";
+  if(wd===2||wd===4)return"プラ";
   if(wd===3){
-    if(week===1||week===3)return"🍾🥫";
-    if(week===2||week===4)return"🔋🪥";
+    if(week===1||week===3)return"ビン・カン";
+    if(week===2||week===4)return"電池・破砕";
   }
   if(wd===5){
-    if(week===2)return"👔";
+    if(week===2)return"古着・家電";
     if(week===4)return"📦";
   }
   return"";
