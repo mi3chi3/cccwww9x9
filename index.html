@@ -176,6 +176,8 @@ button, select, input, textarea{
 <option value="電池・破砕">電池・破砕</option>
 <option value="古着・家電">古着・家電</option>
 <option value="📦">📦</option>
+<option value="ペットボトル">ペットボトル</option>
+<option value="なし">なし</option>
     </select>
 
     <button id="trashSave">保存</button>
@@ -265,6 +267,7 @@ function getTrash(day){
   if(wd===5){
     if(week===2)return"古着・家電";
     if(week===4)return"📦";
+    if(week===1||week===3)return"ペットボトル";
   }
   return"";
 }
