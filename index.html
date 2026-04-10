@@ -7,9 +7,24 @@
 
 <style>
 body {font-family:sans-serif;margin:0;background:#fffef5;}
-.header{display:flex;justify-content:center;gap:20px;padding:10px;}
-.week,.calendar{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;}
-.calendar{padding:10px;gap:6px;}
+
+.header{
+  display:flex;
+  justify-content:center;
+  gap:20px;
+  padding:10px;
+}
+
+.week,.calendar{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  text-align:center;
+}
+
+.calendar{
+  padding:10px;
+  gap:6px;
+}
 
 .day{
   background:white;
@@ -30,6 +45,10 @@ body {font-family:sans-serif;margin:0;background:#fffef5;}
 .today .date{
   background:red;
   color:white;
+}
+
+.holiday{
+  background: rgba(255, 165, 0, 0.2);
 }
 
 .event{
@@ -144,7 +163,6 @@ button, select, input, textarea{
 
 <div id="calendar" class="calendar"></div>
 
-<!-- イベントモーダル -->
 <div id="eventModal" class="modal hidden">
   <div class="box">
     <input id="title" placeholder="タイトル">
@@ -164,20 +182,20 @@ button, select, input, textarea{
   </div>
 </div>
 
-<!-- ゴミモーダル -->
 <div id="trashModal" class="modal hidden">
   <div class="box">
     <div id="trashText"></div>
 
     <select id="trashSelect">
-<option value="🔥">🔥</option>
-<option value="プラ">プラ</option>
-<option value="ビン・カン">ビン・カン</option>
-<option value="電池・破砕">電池・破砕</option>
-<option value="古着・家電">古着・家電</option>
-<option value="📦">📦</option>
-<option value="ペットボトル">ペットボトル</option>
-<option value="なし">なし</option>
+      <option value="">変更なし</option>
+      <option value="🔥">🔥</option>
+      <option value="プラ">プラ</option>
+      <option value="ビン・カン">ビン・カン</option>
+      <option value="電池・破砕">電池・破砕</option>
+      <option value="古着・家電">古着・家電</option>
+      <option value="📦">📦</option>
+      <option value="ペットボトル">ペットボトル</option>
+      <option value="なし">なし</option>
     </select>
 
     <button id="trashSave">保存</button>
@@ -207,16 +225,18 @@ const titleInput = document.getElementById("title");
 const memoInput = document.getElementById("memo");
 const deleteBtn = document.getElementById("delete");
 const colorEls = document.querySelectorAll(".color");
+const trashSelect = document.getElementById("trashSelect");
 
 let month = new Date().getMonth() + 1;
 let year = new Date().getFullYear();
 
 let selectedDay = null;
 let editingIndex = null;
-let color = "#E8A0B8";
+let color = "#fa9bbb";
 
 let events = {};
 let trashOverrides = {};
+let holidays = [];
 
 function key() {
   return `${year}-${month}`;
@@ -243,7 +263,7 @@ function closeTrashModal() {
 }
 
 function setSelectedColor(nextColor) {
-  color = nextColor || "#E8A0B8";
+  color = nextColor || "#fa9bbb";
   colorEls.forEach(c => {
     c.classList.toggle("selected", c.getAttribute("data-color") === color);
   });
@@ -253,23 +273,36 @@ colorEls.forEach(c => {
   c.onclick = () => setSelectedColor(c.getAttribute("data-color"));
 });
 
-function getTrash(day){
-  let date=new Date(year,month-1,day);
-  let wd=date.getDay();
-  let week=Math.ceil(day/7);
+async function fetchHolidays() {
+  const res = await fetch(
+    "https://www.googleapis.com/calendar/v3/calendars/ja.japanese%23holiday%40group.v.calendar.google.com/events?key=AIzaSyD91OacuI4DYkzpZHx1UeRqsHBs_IRYuSo"
+  );
+  const data = await res.json();
+  holidays = data.items?.map(e => e.start?.date).filter(Boolean) || [];
+}
 
-  if(wd===1||wd===4)return"🔥";
-  if(wd===2)return"プラ";
-  if(wd===3){
-    if(week===1||week===3)return"ビン・カン";
-    if(week===2||week===4)return"電池・破砕";
+function isHoliday(y, m, d) {
+  const str = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  return holidays.includes(str);
+}
+
+function getTrash(day) {
+  let date = new Date(year, month - 1, day);
+  let wd = date.getDay();
+  let week = Math.ceil(day / 7);
+
+  if (wd === 1 || wd === 4) return "🔥";
+  if (wd === 2) return "プラ";
+  if (wd === 3) {
+    if (week === 1 || week === 3) return "ビン・カン";
+    if (week === 2 || week === 4) return "電池・破砕";
   }
-  if(wd===5){
-    if(week===2)return"古着・家電";
-    if(week===4)return"📦";
-    if(week===1||week===3)return"ペットボトル";
+  if (wd === 5) {
+    if (week === 2) return "古着・家電";
+    if (week === 4) return "📦";
+    if (week === 1 || week === 3) return "ペットボトル";
   }
-  return"";
+  return "";
 }
 
 onSnapshot(doc(db, "calendar", "shared"), (snap) => {
@@ -309,6 +342,11 @@ function render() {
     date.className = "date";
     date.innerText = d;
 
+    const wd = new Date(year, month - 1, d).getDay();
+    if (wd === 0 || wd === 6 || isHoliday(year, month, d)) {
+      div.classList.add("holiday");
+    }
+
     if (
       d === today.getDate() &&
       month === today.getMonth() + 1 &&
@@ -333,7 +371,7 @@ function render() {
 
           titleInput.value = e.title || "";
           memoInput.value = e.memo || "";
-          setSelectedColor(e.color || "#E8A0B8");
+          setSelectedColor(e.color || "#fa9bbb");
 
           deleteBtn.style.display = "block";
           openEventModal();
@@ -353,8 +391,7 @@ function render() {
           e.stopPropagation();
           selectedDay = next;
           document.getElementById("trashText").innerText = `翌日のゴミ：${val}`;
-          const select = document.getElementById("trashSelect");
-          select.value = trashOverrides[tkey(next)] || "";
+          trashSelect.value = trashOverrides[tkey(next)] || "";
           openTrashModal();
         };
         div.appendChild(dot);
@@ -366,7 +403,7 @@ function render() {
       editingIndex = null;
       titleInput.value = "";
       memoInput.value = "";
-      setSelectedColor("#E8A0B8");
+      setSelectedColor("#fa9bbb");
       deleteBtn.style.display = "none";
       openEventModal();
     };
@@ -398,30 +435,39 @@ document.getElementById("save").onclick = async () => {
 };
 
 deleteBtn.onclick = async () => {
-  if (editingIndex === null) return;
+  if (selectedDay === null || editingIndex === null) return;
   if (!confirm("削除する？")) return;
 
   const k = key();
-  if (!events[k] || !events[k][selectedDay]) return;
+  const dayEvents = events[k]?.[selectedDay];
 
-  events[k][selectedDay].splice(editingIndex, 1);
+  if (!Array.isArray(dayEvents)) return;
+
+  events[k][selectedDay] = dayEvents.filter((_, idx) => idx !== editingIndex);
 
   if (events[k][selectedDay].length === 0) {
     delete events[k][selectedDay];
   }
+
   if (Object.keys(events[k]).length === 0) {
     delete events[k];
   }
 
   editingIndex = null;
+
   await save();
+  render();
   closeEventModal();
 };
 
 document.getElementById("trashSave").onclick = async () => {
-  const val = document.getElementById("trashSelect").value;
-  if (val === "") delete trashOverrides[tkey(selectedDay)];
-  else trashOverrides[tkey(selectedDay)] = val;
+  const val = trashSelect.value;
+
+  if (val === "" || val === "なし") {
+    delete trashOverrides[tkey(selectedDay)];
+  } else {
+    trashOverrides[tkey(selectedDay)] = val;
+  }
 
   await save();
   closeTrashModal();
@@ -430,7 +476,7 @@ document.getElementById("trashSave").onclick = async () => {
 document.getElementById("close").onclick = () => closeEventModal();
 document.getElementById("trashClose").onclick = () => closeTrashModal();
 
-document.getElementById("prev").onclick = () => {
+document.getElementById("prev").onclick = async () => {
   month--;
   if (month < 1) {
     month = 12;
@@ -439,7 +485,7 @@ document.getElementById("prev").onclick = () => {
   render();
 };
 
-document.getElementById("next").onclick = () => {
+document.getElementById("next").onclick = async () => {
   month++;
   if (month > 12) {
     month = 1;
@@ -448,6 +494,7 @@ document.getElementById("next").onclick = () => {
   render();
 };
 
+await fetchHolidays();
 render();
 </script>
 

@@ -30,8 +30,8 @@ body {
 }
 
 .today {
-  background: red;
-  color: white;
+  color: red;
+  font-weight: bold;
 }
 
 .event {
@@ -74,4 +74,7 @@ body {
 
 .selected {
   outline: 3px solid black;
+}
+.weekend {
+  background: rgba(255, 165, 0, 0.2);
 }
